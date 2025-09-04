@@ -55,6 +55,11 @@ if df_moments is not None and df_conversations is not None and df_answers is not
         ("솔루션 계산기", "전체 금액 보기")
     )
     
+    # 데이터 캐시를 수동으로 지우는 버튼을 사이드바에 추가
+    if st.sidebar.button("데이터 새로고침 (캐시 비우기)"):
+        st.cache_data.clear()
+        st.rerun()
+
     if menu_type == "솔루션 계산기":
         # 사이드바에서 솔루션 선택
         solution_type = st.sidebar.selectbox(
@@ -174,14 +179,19 @@ if df_moments is not None and df_conversations is not None and df_answers is not
                         base_price_eur = row[price_eur_col]
                         base_price_krw = row[price_krw_col]
                         base_price_partner = row[price_partner_col]
-                        
+
+                        total_cost_eur = base_price_eur * agent_number
+                        total_cost_krw = base_price_krw * agent_number
+                        total_cost_partner = base_price_partner * agent_number
+
                         # 결과 표시
                         st.success("### 계산 결과")
+                        
                         result_df = pd.DataFrame({
-                            "구분": ["총 예상 매입가"],
-                            "EUR": [f"{base_price_eur:,.2f}"],
-                            "KRW": [f"{base_price_krw:,.0f}"],
-                            "Partner KRW": [f"{base_price_partner:,.0f}"]
+                            "구분": ["기본 매입가", "예상 에이전트 수", "총 예상 매입가"],
+                            "EUR": [f"{base_price_eur:,.2f}", f"{agent_number:,.0f}", f"{total_cost_eur:,.2f}"],
+                            "KRW": [f"{base_price_krw:,.0f}", f"{agent_number:,.0f}", f"{total_cost_krw:,.0f}"],
+                            "Partner KRW": [f"{base_price_partner:,.0f}", f"{agent_number:,.0f}", f"{total_cost_partner:,.0f}"]
                         })
                         st.table(result_df)
                         st.warning("Conversations의 경우 오버리지 가격 정보가 없어 기본 매입가만 표시됩니다.")
@@ -192,9 +202,9 @@ if df_moments is not None and df_conversations is not None and df_answers is not
                                 "Solution": solution_type,
                                 "Plan": selected_plan,
                                 "Details": f"Agent Count: {agent_number}",
-                                "EUR": base_price_eur,
-                                "KRW": base_price_krw,
-                                "Partner KRW": base_price_partner
+                                "EUR": total_cost_eur,
+                                "KRW": total_cost_krw,
+                                "Partner KRW": total_cost_partner
                             })
                             st.info("계산 결과가 임시 저장되었습니다. '전체 금액 보기' 메뉴에서 확인하세요.")
 
