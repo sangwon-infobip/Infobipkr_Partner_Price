@@ -2,22 +2,24 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from io import StringIO
-import s3fs
 
-# S3 파일 경로 설정 (YOUR_BUCKET_NAME을 실제 버킷 이름으로 변경하세요)
+# S3 퍼블릭 URL 설정 (YOUR_BUCKET_NAME과 REGION을 실제 값으로 변경하세요)
 S3_BUCKET = "infobip-partner-price"
-S3_PATH_MOMENTS = f"s3://{S3_BUCKET}/cleaned_moments.csv"
-S3_PATH_CONVERSATIONS = f"s3://{S3_BUCKET}/cleaned_conversations.csv"
-S3_PATH_ANSWERS = f"s3://{S3_BUCKET}/cleaned_answers.csv"
+S3_REGION = "ap-northeast-2"  # 실제 버킷의 리전으로 변경하세요
+S3_BASE_URL = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com"
 
-# S3에서 데이터를 로드하는 함수
+S3_PATH_MOMENTS = f"{S3_BASE_URL}/cleaned_moments.csv"
+S3_PATH_CONVERSATIONS = f"{S3_BASE_URL}/cleaned_conversations.csv"
+S3_PATH_ANSWERS = f"{S3_BASE_URL}/cleaned_answers.csv"
+
+# S3에서 데이터를 로드하는 함수 (자격 증명 없이)
 @st.cache_data
 def load_data_from_s3():
     try:
-        # S3에서 파일 읽기
-        df_moments_raw = pd.read_csv(S3_PATH_MOMENTS, storage_options=st.secrets.s3)
-        df_conversations = pd.read_csv(S3_PATH_CONVERSATIONS, storage_options=st.secrets.s3)
-        df_answers = pd.read_csv(S3_PATH_ANSWERS, storage_options=st.secrets.s3)
+        # 퍼블릭 URL로 직접 파일 읽기
+        df_moments_raw = pd.read_csv(S3_PATH_MOMENTS)
+        df_conversations = pd.read_csv(S3_PATH_CONVERSATIONS)
+        df_answers = pd.read_csv(S3_PATH_ANSWERS)
 
         # moments 파일 클린징 로직 (이전 대화에서 확인된 문제 해결)
         cols_start = ['Plan', 'MEP_Start', 'EUR_Price', 'EUR_Overage', 'KRW_Price', 'KRW_Overage', 'Partner_KRW_Price', 'Partner_KRW_Overage']
@@ -46,6 +48,7 @@ def load_data_from_s3():
 
     except Exception as e:
         st.error(f"S3에서 파일을 불러오는 중 오류가 발생했습니다: {e}")
+        st.info(f"확인 사항:\n1. 버킷이 퍼블릭으로 설정되었는지 확인\n2. 파일이 퍼블릭 읽기 권한을 가지고 있는지 확인\n3. 버킷 이름과 리전이 올바른지 확인")
         return None, None, None
 
 df_moments, df_conversations, df_answers = load_data_from_s3()
@@ -68,7 +71,7 @@ if df_moments is not None and df_conversations is not None and df_answers is not
         if solution_type == "Moments":
             df = df_moments
             primary_col = 'MEP'
-            overage_col = 'Overage_Partner'
+            overage_col = 'Partner_KRW_Overage'
             price_col = 'Partner_KRW_Price'
         else: # Answers
             df = df_answers
@@ -77,11 +80,11 @@ if df_moments is not None and df_conversations is not None and df_answers is not
             price_col = 'price_partner'
 
         # 플랜 선택
-        plan_options = sorted(df['plan'].unique().tolist())
+        plan_options = sorted(df['Plan'].unique().tolist())
         selected_plan = st.selectbox("플랜을 선택하세요:", plan_options)
         
         # 필터링
-        filtered_df = df[df['plan'] == selected_plan].copy()
+        filtered_df = df[df['Plan'] == selected_plan].copy()
         
         if not filtered_df.empty:
             mep_options = sorted(filtered_df[primary_col].unique().tolist())
@@ -152,4 +155,12 @@ if df_moments is not None and df_conversations is not None and df_answers is not
         else:
             st.warning("선택한 플랜의 데이터가 없습니다. 다른 플랜을 선택해주세요.")
 else:
-    st.warning("S3에서 파일을 불러오지 못했습니다. 경로, AWS 자격 증명, 파일 이름을 확인해주세요.")
+    st.warning("S3에서 파일을 불러오지 못했습니다. S3 파일이 퍼블릭으로 설정되었는지 확인해주세요.")
+    
+    # 디버깅용 URL 표시
+    with st.expander("디버깅 정보"):
+        st.write("접근하려는 URL들:")
+        st.write(f"- Moments: {S3_PATH_MOMENTS}")
+        st.write(f"- Conversations: {S3_PATH_CONVERSATIONS}")
+        st.write(f"- Answers: {S3_PATH_ANSWERS}")
+        st.write("\n브라우저에서 위 URL들이 직접 접근 가능한지 확인해보세요.")
