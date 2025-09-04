@@ -39,10 +39,6 @@ def load_data_from_s3(url):
 st.title("솔루션 파트너 매입가 계산기 📊")
 st.markdown("---")
 
-# 데이터 캐시를 수동으로 지우는 버튼 추가
-if st.button("데이터 새로고침 (캐시 비우기)"):
-    st.cache_data.clear()
-    st.rerun()
 
 # 모든 CSV 파일을 로드합니다.
 df_moments = load_data_from_s3(S3_PATH_MOMENTS)
@@ -55,6 +51,11 @@ if df_moments is not None and df_conversations is not None and df_answers is not
         "솔루션을 선택하세요:",
         ("Moments", "Conversations", "Answers")
     )
+
+    # 데이터 캐시를 수동으로 지우는 버튼 추가
+    if st.button("데이터 새로고침 (캐시 비우기)"):
+        st.cache_data.clear()
+        st.rerun()
     
     st.header(f"{solution_type} 솔루션 계산기")
     
