@@ -36,7 +36,7 @@ def load_data_from_s3(url):
         return None
 
 # --- 웹페이지 구성 ---
-st.title("솔루션 파트너 매입가 계산기 📊")
+st.title("인포빕 SaaS 솔루션 파트너 매입가 계산기")
 st.markdown("---")
 
 
@@ -185,3 +185,4 @@ else:
         st.write(f"- Conversations: {S3_PATH_CONVERSATIONS}")
         st.write(f"- Answers: {S3_PATH_ANSWERS}")
         st.write("\n브라우저에서 위 URL들이 직접 접근 가능한지 확인해보세요.")
+
