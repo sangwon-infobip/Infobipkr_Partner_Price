@@ -55,11 +55,6 @@ if df_moments is not None and df_conversations is not None and df_answers is not
         ("솔루션 계산기", "전체 금액 보기")
     )
     
-    # 데이터 캐시를 수동으로 지우는 버튼을 사이드바에 추가
-    if st.sidebar.button("데이터 새로고침 (캐시 비우기)"):
-        st.cache_data.clear()
-        st.rerun()
-
     if menu_type == "솔루션 계산기":
         # 사이드바에서 솔루션 선택
         solution_type = st.sidebar.selectbox(
@@ -97,6 +92,18 @@ if df_moments is not None and df_conversations is not None and df_answers is not
             filtered_df = df[df['plan'] == selected_plan].copy()
             
             if not filtered_df.empty:
+                # 티어별 기준값 테이블 표시
+                st.subheader("선택한 플랜의 티어별 기준값")
+                st.dataframe(filtered_df[[primary_col, price_eur_col, price_krw_col, price_partner_col, overage_eur_col, overage_krw_col, overage_partner_col]].style.format({
+                    primary_col: "{:,.0f}",
+                    price_eur_col: "{:,.2f}",
+                    price_krw_col: "{:,.0f}",
+                    price_partner_col: "{:,.0f}",
+                    overage_eur_col: "{:,.2f}",
+                    overage_krw_col: "{:,.0f}",
+                    overage_partner_col: "{:,.2f}",
+                }))
+                
                 mep_options = sorted(filtered_df[primary_col].unique().tolist())
                 
                 # 사용자 입력
@@ -124,10 +131,10 @@ if df_moments is not None and df_conversations is not None and df_answers is not
                         # 결과 표시
                         st.success("### 계산 결과")
                         result_df = pd.DataFrame({
-                            "구분": ["기준 매입가", "예상 오버리지 비용", "총 예상 매입가"],
-                            "EUR": [f"{base_price_eur:,.2f}", f"{expected_usage * overage_price_eur:,.2f}", f"{total_cost_eur:,.2f}"],
-                            "KRW": [f"{base_price_krw:,.0f}", f"{expected_usage * overage_price_krw:,.0f}", f"{total_cost_krw:,.0f}"],
-                            "Partner KRW": [f"{base_price_partner:,.0f}", f"{expected_usage * overage_price_partner:,.0f}", f"{total_cost_partner:,.0f}"]
+                            "구분": ["기준 매입가", "오버리지 당 가격", "예상 오버리지 비용", "총 예상 매입가"],
+                            "EUR": [f"{base_price_eur:,.2f}", f"{overage_price_eur:,.2f}", f"{expected_usage * overage_price_eur:,.2f}", f"{total_cost_eur:,.2f}"],
+                            "KRW": [f"{base_price_krw:,.0f}", f"{overage_price_krw:,.0f}", f"{expected_usage * overage_price_krw:,.0f}", f"{total_cost_krw:,.0f}"],
+                            "Partner KRW": [f"{base_price_partner:,.0f}", f"{overage_price_partner:,.0f}", f"{expected_usage * overage_price_partner:,.0f}", f"{total_cost_partner:,.0f}"]
                         })
                         st.table(result_df)
                         
@@ -163,6 +170,15 @@ if df_moments is not None and df_conversations is not None and df_answers is not
             
             # 필터링
             filtered_df = df[df['plan'] == selected_plan].copy()
+            
+            st.subheader("선택한 플랜의 티어별 기준값")
+            st.dataframe(filtered_df[['agent_min', 'agent_max', price_eur_col, price_krw_col, price_partner_col]].style.format({
+                'agent_min': "{:,.0f}",
+                'agent_max': "{:,.0f}",
+                price_eur_col: "{:,.2f}",
+                price_krw_col: "{:,.0f}",
+                price_partner_col: "{:,.0f}"
+            }))
 
             if not filtered_df.empty:
                 agent_number = st.number_input("예상 에이전트 수를 입력하세요:", min_value=1, value=1)
@@ -188,12 +204,20 @@ if df_moments is not None and df_conversations is not None and df_answers is not
                         st.success("### 계산 결과")
                         
                         result_df = pd.DataFrame({
-                            "구분": ["기본 매입가", "예상 에이전트 수", "총 예상 매입가"],
-                            "EUR": [f"{base_price_eur:,.2f}", f"{agent_number:,.0f}", f"{total_cost_eur:,.2f}"],
-                            "KRW": [f"{base_price_krw:,.0f}", f"{agent_number:,.0f}", f"{total_cost_krw:,.0f}"],
-                            "Partner KRW": [f"{base_price_partner:,.0f}", f"{agent_number:,.0f}", f"{total_cost_partner:,.0f}"]
+                            "구분": ["기본 매입가", "총 예상 매입가"],
+                            "EUR": [f"{base_price_eur:,.2f}", f"{total_cost_eur:,.2f}"],
+                            "KRW": [f"{base_price_krw:,.0f}", f"{total_cost_krw:,.0f}"],
+                            "Partner KRW": [f"{base_price_partner:,.0f}", f"{total_cost_partner:,.0f}"]
                         })
-                        st.table(result_df)
+                        
+                        agent_df = pd.DataFrame({
+                            "구분": ["예상 에이전트 수"],
+                            "EUR": [f"{agent_number:,.0f}"],
+                            "KRW": [""],
+                            "Partner KRW": [""]
+                        })
+                        
+                        st.table(pd.concat([result_df.iloc[:1], agent_df, result_df.iloc[1:]], ignore_index=True))
                         st.warning("Conversations의 경우 오버리지 가격 정보가 없어 기본 매입가만 표시됩니다.")
                         
                         # 임시 저장 버튼
