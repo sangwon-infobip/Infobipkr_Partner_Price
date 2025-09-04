@@ -8,9 +8,9 @@ S3_BUCKET = "infobip-partner-price"
 S3_REGION = "ap-northeast-2"  # 실제 버킷의 리전으로 변경하세요
 S3_BASE_URL = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com"
 
-S3_PATH_MOMENTS = f"{S3_BASE_URL}/cleaned_moments.csv"
-S3_PATH_CONVERSATIONS = f"{S3_BASE_URL}/cleaned_conversations.csv"
-S3_PATH_ANSWERS = f"{S3_BASE_URL}/cleaned_answers.csv"
+S3_PATH_MOMENTS = f"{S3_BASE_URL}/moments_price.csv"
+S3_PATH_CONVERSATIONS = f"{S3_BASE_URL}/conversations_price.csv"
+S3_PATH_ANSWERS = f"{S3_BASE_URL}/answers_price.csv"
 
 # S3에서 데이터를 로드하는 함수 (자격 증명 없이)
 @st.cache_data
@@ -164,3 +164,4 @@ else:
         st.write(f"- Conversations: {S3_PATH_CONVERSATIONS}")
         st.write(f"- Answers: {S3_PATH_ANSWERS}")
         st.write("\n브라우저에서 위 URL들이 직접 접근 가능한지 확인해보세요.")
+
