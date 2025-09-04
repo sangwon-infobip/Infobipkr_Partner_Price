@@ -1,3 +1,2 @@
 streamlit
-pandas
-s3fs
+requests
