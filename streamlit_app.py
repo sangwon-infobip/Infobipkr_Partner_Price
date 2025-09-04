@@ -36,40 +36,9 @@ def load_data_from_s3(url):
         return None
 
 # 모든 CSV 파일을 로드합니다.
-df_moments_raw = load_data_from_s3(S3_PATH_MOMENTS)
+df_moments = load_data_from_s3(S3_PATH_MOMENTS)
 df_conversations = load_data_from_s3(S3_PATH_CONVERSATIONS)
 df_answers = load_data_from_s3(S3_PATH_ANSWERS)
-
-# 파일 로드 성공 여부 확인 및 데이터 클린징
-if df_moments_raw is not None and df_conversations is not None and df_answers is not None:
-    # moments 파일 클린징 로직
-    cols_start = ['Plan', 'MEP_Start', 'EUR_Price', 'EUR_Overage', 'KRW_Price', 'KRW_Overage', 'Partner_KRW_Price', 'Partner_KRW_Overage']
-    cols_grow = ['Plan', 'MEP_Grow', 'EUR_Price_Grow', 'EUR_Overage_Grow', 'KRW_Price_Grow', 'KRW_Overage_Grow', 'Partner_KRW_Price_Grow', 'Partner_KRW_Overage_Grow']
-    cols_scale = ['Plan', 'MEP_Scale', 'EUR_Price_Scale', 'EUR_Overage_Scale', 'KRW_Price_Scale', 'KRW_Overage_Scale', 'Partner_KRW_Price_Scale', 'Partner_KRW_Overage_Scale']
-    final_cols = ['Plan', 'MEP', 'EUR_Price', 'EUR_Overage', 'KRW_Price', 'KRW_Overage', 'Partner_KRW_Price', 'Partner_KRW_Overage']
-
-    df_start = df_moments_raw[df_moments_raw['Plan'] == 'Start'].copy()
-    df_start = df_start[cols_start]
-    df_start.columns = final_cols
-
-    df_grow = df_moments_raw[df_moments_raw['Plan'] == 'Grow'].copy()
-    df_grow = df_grow[cols_grow]
-    df_grow.columns = final_cols
-
-    df_scale = df_moments_raw[df_moments_raw['Plan'] == 'Scale'].copy()
-    df_scale = df_scale[cols_scale]
-    df_scale.columns = final_cols
-
-    df_moments = pd.concat([df_start, df_grow, df_scale], ignore_index=True)
-
-    for col in df_moments.columns[1:]:
-        df_moments[col] = pd.to_numeric(df_moments[col], errors='coerce')
-
-else:
-    # 데이터 로드 실패 시 None으로 설정
-    df_moments = None
-    df_conversations = None
-    df_answers = None
 
 # --- 웹페이지 구성 ---
 st.title("솔루션 파트너 매입가 계산기 📊")
@@ -88,9 +57,9 @@ if df_moments is not None and df_conversations is not None and df_answers is not
     if solution_type in ["Moments", "Answers"]:
         if solution_type == "Moments":
             df = df_moments
-            primary_col = 'MEP'
-            overage_col = 'Partner_KRW_Overage'
-            price_col = 'Partner_KRW_Price'
+            primary_col = 'mep'  # 변경: moments_price.csv의 'mep' 컬럼 사용
+            overage_col = 'overage_partner'  # 변경: moments_price.csv의 'overage_partner' 컬럼 사용
+            price_col = 'price_partner'  # 변경: moments_price.csv의 'price_partner' 컬럼 사용
         else: # Answers
             df = df_answers
             primary_col = 'mep'
@@ -98,11 +67,11 @@ if df_moments is not None and df_conversations is not None and df_answers is not
             price_col = 'price_partner'
 
         # 플랜 선택
-        plan_options = sorted(df['Plan'].unique().tolist())
+        plan_options = sorted(df['plan'].unique().tolist())
         selected_plan = st.selectbox("플랜을 선택하세요:", plan_options)
         
         # 필터링
-        filtered_df = df[df['Plan'] == selected_plan].copy()
+        filtered_df = df[df['plan'] == selected_plan].copy()
         
         if not filtered_df.empty:
             mep_options = sorted(filtered_df[primary_col].unique().tolist())
@@ -138,8 +107,7 @@ if df_moments is not None and df_conversations is not None and df_answers is not
     # --- Conversations 솔루션 로직 ---
     elif solution_type == "Conversations":
         df = df_conversations
-        primary_col = 'Agent'
-        price_col = 'price_partner'
+        price_col = 'price_partner'  # 'Agent' 컬럼 대신 'price_partner'를 직접 사용합니다.
         
         # 플랜 선택
         plan_options = sorted(df['plan'].unique().tolist())
