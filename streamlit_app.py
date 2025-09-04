@@ -43,11 +43,6 @@ st.markdown("---")
 if "saved_results" not in st.session_state:
     st.session_state.saved_results = []
 
-# 데이터 캐시를 수동으로 지우는 버튼 추가
-if st.button("데이터 새로고침 (캐시 비우기)"):
-    st.cache_data.clear()
-    st.rerun()
-
 # 모든 CSV 파일을 로드합니다.
 df_moments = load_data_from_s3(S3_PATH_MOMENTS)
 df_conversations = load_data_from_s3(S3_PATH_CONVERSATIONS)
@@ -60,6 +55,11 @@ if df_moments is not None and df_conversations is not None and df_answers is not
         ("솔루션 계산기", "전체 금액 보기")
     )
     
+    # 데이터 캐시를 수동으로 지우는 버튼을 사이드바에 추가
+    if st.sidebar.button("데이터 새로고침 (캐시 비우기)"):
+        st.cache_data.clear()
+        st.rerun()
+
     if menu_type == "솔루션 계산기":
         # 사이드바에서 솔루션 선택
         solution_type = st.sidebar.selectbox(
