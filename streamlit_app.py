@@ -14,7 +14,7 @@ S3_PATH_CONVERSATIONS = f"{S3_BASE_URL}/conversations_price.csv"
 S3_PATH_ANSWERS = f"{S3_BASE_URL}/answers_price.csv"
 
 # S3에서 데이터를 로드하는 함수 (자격 증명 없이)
-#@st.cache_data
+@st.cache_data
 def load_data_from_s3(url):
     """S3 퍼블릭 URL에서 CSV 파일을 읽어 DataFrame으로 반환합니다."""
     try:
@@ -266,5 +266,6 @@ else:
         st.write(f"- Conversations: {S3_PATH_CONVERSATIONS}")
         st.write(f"- Answers: {S3_PATH_ANSWERS}")
         st.write("\n브라우저에서 위 URL들이 직접 접근 가능한지 확인해보세요.")
+
 
 
