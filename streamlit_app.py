@@ -257,7 +257,7 @@ if df_moments is not None and df_conversations is not None and df_answers is not
             st.info("저장된 계산 결과가 없습니다. '솔루션 계산기'에서 계산 후 임시 저장 버튼을 눌러주세요.")
 
 else:
-    st.warning("S3에서 파일을 불러오지 못했습니다. S3 파일이 퍼블릭으로 설정되었는지 확인해주세요.")
+    st.warning("S3에서 파일을 불러오지 못했습니다.")
     
     # 디버깅용 URL 표시
     with st.expander("디버깅 정보"):
@@ -266,3 +266,4 @@ else:
         st.write(f"- Conversations: {S3_PATH_CONVERSATIONS}")
         st.write(f"- Answers: {S3_PATH_ANSWERS}")
         st.write("\n브라우저에서 위 URL들이 직접 접근 가능한지 확인해보세요.")
+
